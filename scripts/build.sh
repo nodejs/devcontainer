@@ -1,1 +1,5 @@
-python configure.py --ninja --node-builtin-modules-path /home/nodejs/node && ninja -C out/Release -j 2
+#!/usr/bin/env bash
+
+set -e # Exit with nonzero exit code if anything fails 
+
+~/nodejs/node/configure --ninja --debug && make -C ~/nodejs/node

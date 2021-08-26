@@ -1,17 +1,14 @@
-ARG IMAGE_TAG=latest
+FROM ubuntu:latest AS build
 
-FROM node:${IMAGE_TAG}
-ENV DEBIAN_FRONTEND=noninteractive
-WORKDIR /home/
+RUN groupadd --gid 1000 developer \
+  && useradd --uid 1000 --gid developer --shell /bin/bash --create-home developer
 
-ENTRYPOINT ["./scripts/setup-origin.sh"]
-
-RUN scripts/install.sh
-RUN scripts/mkdir.sh
-RUN scripts/ccache.sh
-RUN scripts/npm.sh
-RUN scripts/fetch.sh
-
+ENV DEBIAN_FRONTEND=1
 ENV PATH /usr/lib/ccache:$PATH
 
-RUN scripts/build.sh
+COPY ./scripts/ ./scripts/
+RUN ./scripts/install.sh
+RUN ./scripts/mkdir.sh && ./scripts/ccache.sh && ./scripts/clone.sh
+RUN ./scripts/build.sh
+RUN make install -C ~/nodejs/node
+RUN ./scripts/ncu.sh
