@@ -8,4 +8,3 @@ ENV PATH /usr/lib/ccache:$PATH
 
 COPY --chown=root:developer ./scripts/ /home/developer/scripts/
 RUN /home/developer/scripts/install.sh && /home/developer/scripts/mkdir.sh && /home/developer/scripts/ccache.sh && /home/developer/scripts/clone.sh && /home/developer/scripts/build.sh && make install -C /home/developer/nodejs/node && /home/developer/scripts/ncu.sh
-# && /home/developer/scripts/clean.sh
