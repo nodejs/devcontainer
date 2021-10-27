@@ -9,4 +9,12 @@ You will need to:
 
 You will want to:
 - Build Node.js with Ninja (rather than just `make`):
-  - `~/nodejs/node/configure --ninja --debug && make -C ~/nodejs/node`
+  - `/home/developer/nodejs/node/configure --ninja && make -C ~/nodejs/node`
+
+## Development
+
+Some useful commands:
+- `docker build .` - build the current Dockerfile
+- `docker image ls` - list the images and IDs
+- `docker run -it <image id> /bin/bash` - run a container and shell into it
+- `docker tag <image id> devenv:latest` - run to tag an image as latest
