@@ -2,8 +2,8 @@
 
 set -e # Exit with nonzero exit code if anything fails 
 
-cd ~/nodejs
-git clone https://github.com/nodejs/node.git
-cd ~/nodejs/node
+cd /home/developer/nodejs
+git clone https://github.com/nodejs/node.git --single-branch --branch master --depth 1
+cd /home/developer/nodejs/node
 git remote add upstream https://github.com/nodejs/node.git
 git fetch upstream

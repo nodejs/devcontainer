@@ -2,5 +2,5 @@
 
 set -e # Exit with nonzero exit code if anything fails 
 
-mkdir ~/nodejs
-mkdir -p ~/ninja/out/Release
+mkdir /home/developer/nodejs
+mkdir -p /home/developer/ninja/out/Release

@@ -11,7 +11,6 @@ package_list="
   python-setuptools \
   python3-pip \
   ninja-build \
-  python3 \
   g++ \
   sudo \
   make \
