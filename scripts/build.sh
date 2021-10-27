@@ -2,4 +2,4 @@
 
 set -e # Exit with nonzero exit code if anything fails 
 
-~/nodejs/node/configure --ninja --debug && make -C ~/nodejs/node
+/home/developer/nodejs/node/configure --ninja && make -C /home/developer/nodejs/node
