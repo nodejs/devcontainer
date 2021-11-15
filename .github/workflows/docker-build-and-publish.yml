@@ -3,7 +3,8 @@ name: ci
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
+  workflow_dispatch:
 
 jobs:
   docker:
