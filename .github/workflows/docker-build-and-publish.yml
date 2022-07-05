@@ -1,9 +1,9 @@
 name: Build and Publish Image
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # allows us to trigger runs manually in the GitHub UI
   schedule:
-    - cron:  '0 0 * * *'
+    - cron:  '0 0 * * *' # runs nightly
 
 jobs:
   docker:
@@ -15,7 +15,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
       - name: Login to DockerHub
         uses: docker/login-action@v1 
-        with:
+        with: # these are defined in the GitHub Secrets UI
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push
@@ -23,4 +23,4 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: bitandbang/devenv:latest
+          tags: nodejs/devcontainer:nightly
