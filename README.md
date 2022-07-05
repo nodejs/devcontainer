@@ -1,4 +1,4 @@
-# Node.js Developer Environment (`devenv`)
+# Node.js Developer Container (`devcontainer`)
 
 ## End-user Setup
 
