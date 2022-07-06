@@ -17,7 +17,6 @@ docker run -it nodejs/devcontainer:nightly /bin/bash
 
 Once you've run those commands, you'll be in a shell inside the running container. If you need to escape, type `exit`. You should be good to jump to [Working in the Container](#working-in-the-container).
 
-```bash
 ### Working in the Container
 
 - The project is located at `/home/developer/nodejs/node`.
