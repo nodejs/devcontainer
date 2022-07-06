@@ -4,8 +4,20 @@
 
 ### Setup
 
-_This will be documented once publishing is successful and the Docker image is publicly available._
+#### Running with Docker Desktop
 
+To run locally on your machine, you'll want to install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and start it up.
+
+Once you've got Docker Destop running, you can run the following command to pull and start the image:
+
+```sh
+docker pull nodejs/devcontainer:nightly
+docker run -it nodejs/devcontainer:nightly /bin/bash
+```
+
+Once you've run those commands, you'll be in a shell inside the running container. If you need to escape, type `exit`. You should be good to jump to [Working in the Container](#working-in-the-container).
+
+```bash
 ### Working in the Container
 
 - The project is located at `/home/developer/nodejs/node`.
