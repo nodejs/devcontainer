@@ -1,3 +1,0 @@
-- [x] Switch to `node:latest`
-- [x] Install `node-core-utils`
-- [x] Documentation 
