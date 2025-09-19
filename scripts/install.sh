@@ -8,13 +8,16 @@ package_list="
   curl \
   nano \
   python3 \
-  python-setuptools \
   python3-pip \
+  python-is-python3 \
   ninja-build \
   g++ \
-  sudo \
+  gcc \
+  g++-12 \
+  gcc-12 \
   make \
   git \
+  pkg-config \
   locales \
   gpg \
   wget"
@@ -29,7 +32,3 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githu
 gh_package_list="gh"
 apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends $gh_package_list
-
-# No Sudo Prompt - thanks Electron for this
-echo 'developer ALL=NOPASSWD: ALL' >> /etc/sudoers.d/50-developer
-echo 'Defaults    env_keep += "DEBIAN_FRONTEND"' >> /etc/sudoers.d/env_keep
