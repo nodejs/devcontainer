@@ -1,3 +1,5 @@
 - [x] Switch to `node:latest`
 - [x] Install `node-core-utils`
 - [x] Documentation 
+- [ ] Split into multiple stages https://github.com/nodejs/devcontainer/pull/12#discussion_r2375074158
+- [ ] Reuse Dockerfile bits from https://github.com/nodejs/build/blob/main/ansible/roles/docker/templates
