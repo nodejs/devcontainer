@@ -18,13 +18,16 @@ RUN echo 'Defaults    env_keep += "DEBIAN_FRONTEND"' >> /etc/sudoers.d/env_keep
 ENV DEBIAN_FRONTEND=1
 ENV PATH=/usr/lib/ccache:$PATH
 
-COPY --chown=root:developer ./scripts/ /home/developer/scripts/
+# Copy scripts and make them executable by both root and developer
+COPY --chown=root:developer --chmod=0755 ./scripts/ /home/developer/scripts/
 RUN /home/developer/scripts/install.sh
-RUN /home/developer/scripts/mkdir.sh
 RUN /home/developer/scripts/ccache.sh
+
+USER developer
 RUN /home/developer/scripts/clone.sh
 RUN /home/developer/scripts/build.sh
-RUN make install -C /home/developer/nodejs/node
-RUN /home/developer/scripts/ncu.sh
 
+ENV PATH=/home/developer/.local/bin:$PATH
 WORKDIR /home/developer/nodejs/node
+RUN /home/developer/scripts/install-node.sh
+RUN /home/developer/scripts/ncu.sh

@@ -8,26 +8,53 @@
 
 To run locally on your machine, you'll want to install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and start it up.
 
-Once you've got Docker Destop running, you can run the following command to pull and start the image:
+It's recommended to use Visual Studio Code with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+installed, but you can also run the container directly with Docker CLI or the [Dev Container CLI](https://github.com/devcontainers/cli), or attach any editor that supports the concept of [`devcontainers`](https://containers.dev/) to this container.
+
+Once you've got Docker Desktop running, you can run the following command to pull and start the image:
 
 ```sh
 docker pull nodejs/devcontainer:nightly
 docker run -it nodejs/devcontainer:nightly /bin/bash
 ```
 
-Once you've run those commands, you'll be in a shell inside the running container. If you need to escape, type `exit`. You should be good to jump to [Working in the Container](#working-in-the-container).
+To use it as a devcontainer, create a `.devcontainer/devcontainer.json` file in the project with the following content:
+
+```json
+{
+  "name": "Node.js Dev Container",
+  "image": "nodejs/devcontainer:nightly",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/developer/nodejs/node,type=bind,consistency=cached",
+  "workspaceFolder": "/home/developer/nodejs/node",
+  "remoteUser": "developer",
+  "mounts": [
+    "source=build-cache,target=/home/developer/nodejs/node/out,type=volume"
+  ],
+  "postCreateCommand": "git restore-mtime"
+}
+```
+
+For example, to use it with Visual Studio Code, use the "Dev Containers: Reopen in Container" command from the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`). After the container is built and started, you should be inside the container with the project mounted in the working directory, while the build cache volume mounted at `out/` to speed up builds.
 
 ### Working in the Container
 
-- The project is located at `/home/developer/nodejs/node`.
-  - Once this directory is your active directory, you should be good to go.
-  - If you want to build the project in the container, run with ninja (rather than just make):
-    - `/home/developer/nodejs/node/configure --ninja && make -C /home/developer/nodejs/node`
-- You should be able to attach any editor that supports the concept of [`devcontainers`](https://containers.dev/) to this 
+- The project is located at `/home/developer/nodejs/node`. After the container is started, you should be automatically placed in this directory.
+- If you want to build the project in the container, run with `ninja` (rather than just `make`):
+  - To build the release build, run `ninja -C out/Release`
+  - The container comes with a release build that can be picked up by `ninja`. As long as your mounted local checkout is not too far behind the checkout in the container, incremental builds should be fast.
+  - If you notice that the build is not picking up your changes after checking out a different branch, run `git restore-mtime` in the container to sync the mtimes of the files in your checkout with the git commit timestamps.
+  - You can also set up a git hook to sync the mtime automatically on checkout to keep the build cache effective. From the container, run:
+
+    ```bash
+    mkdir -p /home/developer/nodejs/node/.git/hooks
+    cp /home/developer/scripts/post-checkout /home/developer/nodejs/node/.git/hooks/post-checkout
+    ```
+
+    Note that if you install this git hook to your mounted project, and you still wish to run `git checkout` from you local system, you will need to install [`git-restore-mtime`](https://github.com/MestreLion/git-tools) on your local system as well.
 
 ### Personal Configuration
 
-Assuming you've already got the Docker container running:
+Do this from your local system, not in the container. The `git` configuration will be used in the container since the project is mounted from your local system.
 
 - Set the git `origin` to your own fork rather than `nodejs/node`
   - Example, where `USERNAME` is your GitHub username: `$ git remote set-url origin https://github.com/USERNAME/node.git`
