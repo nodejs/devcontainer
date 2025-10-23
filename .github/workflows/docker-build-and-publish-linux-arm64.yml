@@ -7,7 +7,7 @@ on:
 
 jobs:
   docker:
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.ref == format('refs/heads/{0}', vars.NIGHTLY_BRANCH) }}
     runs-on: ubuntu-24.04-arm64
     steps: # See https://docs.docker.com/build/ci/github-actions/multi-platform/
       - name: Login to DockerHub
@@ -24,4 +24,4 @@ jobs:
         with:
           platforms: linux/arm64
           push: true
-          tags: nodejs/devcontainer:nightly-linux-arm64
+          tags: ${{ vars.DOCKERHUB_IMAGE }}:nightly-linux-arm64

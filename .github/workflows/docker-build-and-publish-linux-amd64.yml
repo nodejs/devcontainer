@@ -7,9 +7,9 @@ on:
 
 jobs:
   docker:
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.ref == format('refs/heads/{0}', vars.NIGHTLY_BRANCH) }}
     runs-on: ubuntu-24.04
-    steps:
+    steps: # See https://docs.docker.com/build/ci/github-actions/multi-platform/
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with: # these are defined in the GitHub Secrets UI
@@ -24,4 +24,4 @@ jobs:
         with:
           platforms: linux/amd64
           push: true
-          tags: nodejs/devcontainer:nightly-linux-amd64
+          tags: ${{ vars.DOCKERHUB_IMAGE }}:nightly-linux-amd64

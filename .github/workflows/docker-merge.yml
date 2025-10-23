@@ -4,10 +4,9 @@ on:
   workflow_run:  # Fires when any of the specified workflows complete
     workflows: ["Build and Publish Linux ARM64 Image", "Build and Publish Linux AMD64 Image"]
     types: [completed]
-    branches: [main]
 
 env:
-  IMAGE: nodejs/devcontainer
+  IMAGE: ${{ vars.DOCKERHUB_IMAGE }}
   REGISTRY: docker.io
 
 concurrency:  # ensure only one merge runs at a time
@@ -16,7 +15,7 @@ concurrency:  # ensure only one merge runs at a time
 
 jobs:
   merge:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == vars.NIGHTLY_BRANCH }}
     runs-on: ubuntu-latest
     steps:
       - name: Login to DockerHub
