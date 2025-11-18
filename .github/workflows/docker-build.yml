@@ -1,0 +1,25 @@
+name: Nightly build orchestrator
+
+on:
+  workflow_dispatch: # allows us to trigger runs manually in the GitHub UI
+  repository_dispatch: # allows us to trigger runs from an external repository
+  schedule:
+    - cron:  '0 0 * * *' # runs nightly
+
+# When any of the build workflows complete successfully on the nightly branch,
+# the merge workflow will be triggered by those workflows directly to update
+# the build for that platform. These are run independently and concurrently,
+# if any of them fail, at worst the image for that specific platform won't be
+# updated, but at least one usable image for a platform is always available,
+# which is better than dragging the updates for all platforms to wait
+# for one platform to be fixed.
+jobs:
+  call_build_arm64:
+    if: ${{ github.ref == format('refs/heads/{0}', vars.NIGHTLY_BRANCH) }}
+    uses: ./.github/workflows/docker-build-and-publish-linux-arm64.yml
+    secrets: inherit
+
+  call_build_amd64:
+    if: ${{ github.ref == format('refs/heads/{0}', vars.NIGHTLY_BRANCH) }}
+    uses: ./.github/workflows/docker-build-and-publish-linux-amd64.yml
+    secrets: inherit
