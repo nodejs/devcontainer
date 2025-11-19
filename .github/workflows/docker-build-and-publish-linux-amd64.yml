@@ -2,12 +2,10 @@ name: Build and Publish Linux AMD64 Image
 
 on:
   workflow_dispatch: # allows us to trigger runs manually in the GitHub UI
-  schedule:
-    - cron:  '0 0 * * *' # runs nightly
+  workflow_call: # allows this workflow to be called by another workflow
 
 jobs:
   docker:
-    if: ${{ github.ref == format('refs/heads/{0}', vars.NIGHTLY_BRANCH) }}
     runs-on: ubuntu-24.04
     steps: # See https://docs.docker.com/build/ci/github-actions/multi-platform/
       - name: Login to DockerHub
