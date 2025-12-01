@@ -1,4 +1,4 @@
-name: Nightly build orchestrator
+name: Nightly Build Orchestrator
 
 on:
   workflow_dispatch: # allows us to trigger runs manually in the GitHub UI
