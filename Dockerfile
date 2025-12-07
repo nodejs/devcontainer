@@ -9,25 +9,38 @@ RUN useradd --uid $USER_UID --gid $USER_GID --shell /bin/bash --create-home deve
 
 # Install sudo first
 RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl git git-restore-mtime sudo xz-utils
 
 # No Sudo Prompt - thanks Electron for this
 RUN echo 'developer ALL=NOPASSWD: ALL' >> /etc/sudoers.d/developer
 RUN echo 'Defaults    env_keep += "DEBIAN_FRONTEND"' >> /etc/sudoers.d/env_keep
 
 ENV DEBIAN_FRONTEND=1
-ENV PATH=/usr/lib/ccache:$PATH
 
 # Copy scripts and make them executable by both root and developer
 COPY --chown=root:developer --chmod=0755 ./scripts/ /home/developer/scripts/
-RUN /home/developer/scripts/install.sh
-RUN /home/developer/scripts/ccache.sh
 
 USER developer
 RUN /home/developer/scripts/clone.sh
+
+# Installing Nix and Cachix
+RUN curl -L https://github.com/cachix/install-nix-action/raw/HEAD/install-nix.sh | \
+      USER=developer \
+      INPUT_SET_AS_TRUSTED_USER=true \
+      INPUT_ENABLE_KVM=true \
+      INPUT_EXTRA_NIX_CONFIG= \
+      INPUT_INSTALL_OPTIONS= \
+      RUNNER_TEMP=$(mktemp -d) GITHUB_ENV=/dev/null GITHUB_PATH=/dev/null bash
+ENV NIX_PROFILES="/nix/var/nix/profiles/default /home/developer/.nix-profile"
+ENV NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV PATH="/home/developer/.nix-profile/bin:${PATH}"
+RUN nix-env -iA cachix -f https://cachix.org/api/v1/install
+RUN USER=developer cachix use nodejs
+
 RUN /home/developer/scripts/build.sh
 
-ENV PATH=/home/developer/.local/bin:$PATH
 WORKDIR /home/developer/nodejs/node
 RUN /home/developer/scripts/install-node.sh
 RUN /home/developer/scripts/ncu.sh
+
+ENTRYPOINT ["/home/developer/.nix-profile/bin/nix-shell", "--pure", "-I", "nixpkgs=/home/developer/nodejs/node/tools/nix/pkgs.nix"]
