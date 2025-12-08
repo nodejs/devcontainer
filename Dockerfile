@@ -33,7 +33,7 @@ RUN curl -L "https://github.com/$(sed -nE 's#.*(cachix/install-nix-action)@([a-f
       RUNNER_TEMP=$(mktemp -d) GITHUB_ENV=/dev/null GITHUB_PATH=/dev/null bash
 ENV NIX_PROFILES="/nix/var/nix/profiles/default /home/developer/.nix-profile"
 ENV NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
-ENV PATH="/home/developer/.nix-profile/bin:${PATH}"
+ENV PATH="/home/developer/.local/bin:/home/developer/.nix-profile/bin:${PATH}"
 RUN nix-env -iA cachix -f https://cachix.org/api/v1/install
 RUN USER=developer cachix use nodejs
 
