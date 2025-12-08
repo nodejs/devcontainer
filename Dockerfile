@@ -24,7 +24,7 @@ USER developer
 RUN /home/developer/scripts/clone.sh
 
 # Installing Nix and Cachix
-RUN curl -L https://github.com/cachix/install-nix-action/raw/HEAD/install-nix.sh | \
+RUN curl -L "https://github.com/$(sed -nE 's#.*(cachix/install-nix-action)@([a-f0-9]+).*#\1/raw/\2#p' /home/developer/nodejs/node/.github/workflows/test-shared.yml)/install-nix.sh" | \
       USER=developer \
       INPUT_SET_AS_TRUSTED_USER=true \
       INPUT_ENABLE_KVM=true \
