@@ -30,7 +30,7 @@ To use it as a devcontainer, create a `.devcontainer/devcontainer.json` file in 
   "mounts": [
     "source=build-cache,target=/home/developer/nodejs/node/out,type=volume"
   ],
-  "postCreateCommand": "git restore-mtime"
+  "postCreateCommand": ""
 }
 ```
 
@@ -42,15 +42,6 @@ For example, to use it with Visual Studio Code, use the "Dev Containers: Reopen 
 - If you want to build the project in the container, run with `ninja` (rather than just `make`):
   - To build the release build, run `ninja -C out/Release`
   - The container comes with a release build that can be picked up by `ninja`. As long as your mounted local checkout is not too far behind the checkout in the container, incremental builds should be fast.
-  - If you notice that the build is not picking up your changes after checking out a different branch, run `git restore-mtime` in the container to sync the mtimes of the files in your checkout with the git commit timestamps.
-  - You can also set up a git hook to sync the mtime automatically on checkout to keep the build cache effective. From the container, run:
-
-    ```bash
-    mkdir -p /home/developer/nodejs/node/.git/hooks
-    cp /home/developer/scripts/post-checkout /home/developer/nodejs/node/.git/hooks/post-checkout
-    ```
-
-    Note that if you install this git hook to your mounted project, and you still wish to run `git checkout` from you local system, you will need to install [`git-restore-mtime`](https://github.com/MestreLion/git-tools) on your local system as well.
 
 ### Personal Configuration
 
