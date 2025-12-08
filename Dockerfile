@@ -43,4 +43,5 @@ WORKDIR /home/developer/nodejs/node
 RUN /home/developer/scripts/install-node.sh
 RUN /home/developer/scripts/ncu.sh
 
-ENTRYPOINT ["/home/developer/.nix-profile/bin/nix-shell", "--pure", "-I", "nixpkgs=/home/developer/nodejs/node/tools/nix/pkgs.nix"]
+# We pass `--impure` so the locally installed `node` build is available on the PATH.
+ENTRYPOINT ["/home/developer/.nix-profile/bin/nix-shell", "--impure", "-I", "nixpkgs=/home/developer/nodejs/node/tools/nix/pkgs.nix"]
