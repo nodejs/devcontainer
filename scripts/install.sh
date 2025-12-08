@@ -20,8 +20,7 @@ package_list="
   pkg-config \
   locales \
   gpg \
-  wget \
-  git-restore-mtime"
+  wget"
 
 # Install Packages
 apt-get update
