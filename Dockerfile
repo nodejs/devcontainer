@@ -45,7 +45,7 @@ RUN echo 'eval "$(direnv hook bash)"' >> /home/developer/.bashrc
 
 # Setting up direnv for the local clone
 ARG USE_SHARED_LIBS=false
-RUN echo "use nix --impure -I nixpkgs=/home/developer/nodejs/node/tools/nix/pkgs.nix$([ "${USE_SHARED_LIBS}" = "true" ] || echo " --arg sharedLibDeps '{}'")" > /home/developer/nodejs/node/.envrc
+RUN echo "use nix --impure -I nixpkgs=/home/developer/nodejs/node/tools/nix/pkgs.nix$([ "${USE_SHARED_LIBS}" = "true" ] || echo " --arg sharedLibDeps '{}' --argstr icu full")" > /home/developer/nodejs/node/.envrc
 RUN direnv allow /home/developer/nodejs/node
 
 RUN /home/developer/scripts/build.sh
