@@ -2,7 +2,6 @@ FROM ubuntu:latest AS build
 
 ARG USER_UID=900
 ARG USER_GID=$USER_UID
-ARG USE_SHARED_LIBS=false
 
 # Create the non-root user and grant NOPASSWD sudo
 RUN groupadd --gid $USER_GID developer
@@ -42,9 +41,12 @@ RUN USER=developer cachix use nodejs
 RUN nix profile add nixpkgs#nix-direnv nixpkgs#direnv -I nixpkgs=/home/developer/nodejs/node/tools/nix/pkgs.nix
 RUN mkdir -p /home/developer/.config/direnv && \
     echo 'source $HOME/.nix-profile/share/nix-direnv/direnvrc' > /home/developer/.config/direnv/direnvrc
+RUN echo 'eval "$(direnv hook bash)"' >> /home/developer/.bashrc
+
+# Setting up direnv for the local clone
+ARG USE_SHARED_LIBS=false
 RUN echo "use nix --impure -I nixpkgs=/home/developer/nodejs/node/tools/nix/pkgs.nix$([ "${USE_SHARED_LIBS}" = "true" ] || echo " --arg sharedLibDeps '{}'")" > /home/developer/nodejs/node/.envrc
 RUN direnv allow /home/developer/nodejs/node
-RUN echo 'eval "$(direnv hook bash)"' >> /home/developer/.bashrc
 
 RUN /home/developer/scripts/build.sh
 
