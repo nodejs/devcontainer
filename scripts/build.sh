@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
-set -e # Exit with nonzero exit code if anything fails 
+set -xe
 
-/home/developer/nodejs/node/configure --ninja && make -C /home/developer/nodejs/node
+cd /home/developer/nodejs/node
+eval "$(direnv export bash)"
+
+make -C /home/developer/nodejs/node build-ci

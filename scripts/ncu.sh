@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-set -e # Exit with nonzero exit code if anything fails 
+set -xe
 
-npm install -g @node-core/utils
+cd /home/developer/nodejs/node
+eval "$(direnv export bash)"
 
 ncu-config set upstream upstream
 ncu-config set branch main

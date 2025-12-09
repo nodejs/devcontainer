@@ -71,7 +71,7 @@ Do this from your local system, not in the container. The `git` configuration wi
 Some useful commands:
 - `docker build .` - build the current Dockerfile
 - `docker image ls` - list the images and IDs
-- `docker run -it <image id> /bin/bash` - run a container and shell into it
+- `docker run -it <image id>` - run a container and shell into it
 - `docker tag <image id> devcontainer:nightly` - run to tag an image as `nightly`
 
 
