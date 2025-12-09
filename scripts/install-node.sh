@@ -1,7 +1,9 @@
-#!/usr/bin/env nix-shell
-#! nix-shell --pure -i bash -I nixpkgs=/home/developer/nodejs/node/tools/nix/pkgs.nix /home/developer/nodejs/node/shell.nix
+#!/usr/bin/env bash
 
 set -xe
+
+cd /home/developer/nodejs/node
+eval "$(direnv export bash)"
 
 make install PREFIX=/home/developer/.local -C /home/developer/nodejs/node
 {

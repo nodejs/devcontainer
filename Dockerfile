@@ -2,6 +2,7 @@ FROM ubuntu:latest AS build
 
 ARG USER_UID=900
 ARG USER_GID=$USER_UID
+ARG USE_SHARED_LIBS=false
 
 # Create the non-root user and grant NOPASSWD sudo
 RUN groupadd --gid $USER_GID developer
@@ -37,11 +38,19 @@ ENV PATH="/home/developer/.local/bin:/home/developer/.nix-profile/bin:${PATH}"
 RUN nix-env -iA cachix -f https://cachix.org/api/v1/install
 RUN USER=developer cachix use nodejs
 
+# Installing direnv
+RUN nix profile add nixpkgs#nix-direnv nixpkgs#direnv -I nixpkgs=/home/developer/nodejs/node/tools/nix/pkgs.nix
+RUN mkdir -p /home/developer/.config/direnv && \
+    echo 'source $HOME/.nix-profile/share/nix-direnv/direnvrc' > /home/developer/.config/direnv/direnvrc
+RUN echo "use nix --impure -I nixpkgs=/home/developer/nodejs/node/tools/nix/pkgs.nix$([ "${USE_SHARED_LIBS}" = "true" ] || echo " --arg sharedLibDeps '{}'")" > /home/developer/nodejs/node/.envrc
+RUN direnv allow /home/developer/nodejs/node
+RUN echo 'eval "$(direnv hook bash)"' >> /home/developer/.bashrc
+
 RUN /home/developer/scripts/build.sh
 
 WORKDIR /home/developer/nodejs/node
 RUN /home/developer/scripts/install-node.sh
 RUN /home/developer/scripts/ncu.sh
 
-# We pass `--impure` so the locally installed `node` build is available on the PATH.
-ENTRYPOINT ["/home/developer/.nix-profile/bin/nix-shell", "--impure", "-I", "nixpkgs=/home/developer/nodejs/node/tools/nix/pkgs.nix"]
+# direnv will automatically load the nix environment when entering the directory
+ENTRYPOINT ["/bin/bash", "-l"]
