@@ -24,6 +24,8 @@ USER developer
 RUN /home/developer/scripts/clone.sh
 
 # Installing Nix and Cachix
+# using the same script test-shared workflow uses upstream
+# See https://github.com/cachix/install-nix-action/blob/HEAD/install-nix.sh
 RUN curl -L "https://github.com/$(sed -nE 's#.*(cachix/install-nix-action)@([a-f0-9]+).*#\1/raw/\2#p' /home/developer/nodejs/node/.github/workflows/test-shared.yml)/install-nix.sh" | \
       USER=developer \
       INPUT_SET_AS_TRUSTED_USER=true \
@@ -45,6 +47,7 @@ RUN echo 'eval "$(direnv hook bash)"' >> /home/developer/.bashrc
 
 # Setting up direnv for the local clone
 ARG USE_SHARED_LIBS=false
+# Modifications to the env (such as adding flags, or env variables) should be done upstream unless it's only applicable to this repo.
 RUN echo "use nix --impure -I nixpkgs=/home/developer/nodejs/node/tools/nix/pkgs.nix$([ "${USE_SHARED_LIBS}" = "true" ] || echo " --arg sharedLibDeps '{}' --argstr icu full")" > /home/developer/nodejs/node/.envrc
 RUN direnv allow /home/developer/nodejs/node
 
