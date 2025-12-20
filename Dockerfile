@@ -23,8 +23,8 @@ COPY --chown=root:developer --chmod=0755 ./scripts/ /home/developer/scripts/
 USER developer
 RUN /home/developer/scripts/clone.sh
 
-# Installing Nix and Cachix
-# using the same script test-shared workflow uses upstream
+# Installing Nix using the same script test-shared workflow uses upstream.
+# See https://github.com/nodejs/node/blob/HEAD/.github/workflows/test-shared.yml
 # See https://github.com/cachix/install-nix-action/blob/HEAD/install-nix.sh
 RUN curl -L "https://github.com/$(sed -nE 's#.*(cachix/install-nix-action)@([a-f0-9]+).*#\1/raw/\2#p' /home/developer/nodejs/node/.github/workflows/test-shared.yml)/install-nix.sh" | \
       USER=developer \
@@ -36,6 +36,7 @@ RUN curl -L "https://github.com/$(sed -nE 's#.*(cachix/install-nix-action)@([a-f
 ENV NIX_PROFILES="/nix/var/nix/profiles/default /home/developer/.nix-profile"
 ENV NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 ENV PATH="/home/developer/.local/bin:/home/developer/.nix-profile/bin:${PATH}"
+# Installing Cachix, and set it up to reuse binaries build by the CI.
 RUN nix-env -iA cachix -f https://cachix.org/api/v1/install
 RUN USER=developer cachix use nodejs
 
@@ -47,7 +48,7 @@ RUN echo 'eval "$(direnv hook bash)"' >> /home/developer/.bashrc
 
 # Setting up direnv for the local clone
 ARG USE_SHARED_LIBS=false
-# Modifications to the env (such as adding flags, or env variables) should be done upstream unless it's only applicable to this repo.
+# As much as possible, we want to use the defaults set in shell.nix so the DX is consistent for users of devcontainers and users of Nix.
 RUN echo "use nix --impure -I nixpkgs=/home/developer/nodejs/node/tools/nix/pkgs.nix$([ "${USE_SHARED_LIBS}" = "true" ] || echo " --arg sharedLibDeps '{}' --argstr icu full")" > /home/developer/nodejs/node/.envrc
 RUN direnv allow /home/developer/nodejs/node
 

@@ -5,5 +5,6 @@ set -xe
 cd /home/developer/nodejs/node
 eval "$(direnv export bash)"
 
-# BUILD_WTIH=ninja is set in https://github.com/nodejs/node/blob/HEAD/shell.nix
+# Build tools and env variables (including e.g. BUILD_WITH=ninja) are
+# defined in https://github.com/nodejs/node/blob/HEAD/shell.nix
 make -C /home/developer/nodejs/node build-ci
