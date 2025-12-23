@@ -1,9 +1,8 @@
 name: Merge images
 
 on:
-  workflow_run:  # Fires when any of the specified workflows complete
-    workflows: ["Build and Publish Linux ARM64 Image", "Build and Publish Linux AMD64 Image"]
-    types: [completed]
+  workflow_dispatch:  # allow explicit dispatches from arch-specific builds
+  workflow_call:    # allow this workflow to be called by another workflow
 
 env:
   IMAGE: ${{ vars.DOCKERHUB_IMAGE }}
@@ -15,7 +14,6 @@ concurrency:  # ensure only one merge runs at a time
 
 jobs:
   merge:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == vars.NIGHTLY_BRANCH }}
     runs-on: ubuntu-latest
     steps:
       - name: Login to DockerHub

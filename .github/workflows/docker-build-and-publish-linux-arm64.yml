@@ -23,3 +23,8 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: ${{ vars.DOCKERHUB_IMAGE }}:nightly-linux-arm64
+
+  merge:
+    needs: [docker]
+    uses: ./.github/workflows/docker-merge.yml
+    secrets: inherit
