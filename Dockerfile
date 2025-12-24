@@ -46,10 +46,10 @@ RUN mkdir -p /home/developer/.config/direnv && \
     echo 'source $HOME/.nix-profile/share/nix-direnv/direnvrc' > /home/developer/.config/direnv/direnvrc
 RUN echo 'eval "$(direnv hook bash)"' >> /home/developer/.bashrc
 
-# Setting up direnv for the local clone
-ARG USE_SHARED_LIBS=false
-# As much as possible, we want to use the defaults set in shell.nix so the DX is consistent for users of devcontainers and users of Nix.
-RUN echo "use nix --impure -I nixpkgs=/home/developer/nodejs/node/tools/nix/pkgs.nix$([ "${USE_SHARED_LIBS}" = "true" ] || echo " --arg sharedLibDeps '{}' --argstr icu full")" > /home/developer/nodejs/node/.envrc
+# Setting up direnv for the local clone, see envrc/README.md for more info
+COPY --chown=root:developer --chmod=0644 ./envrc/ /home/developer/envrc/
+ARG IMAGE_VARIANT=static-libs
+RUN cp "/home/developer/envrc/${IMAGE_VARIANT}.envrc" /home/developer/nodejs/node/.envrc
 RUN direnv allow /home/developer/nodejs/node
 
 RUN /home/developer/scripts/build.sh
