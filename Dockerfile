@@ -47,7 +47,7 @@ RUN mkdir -p /home/developer/.config/direnv && \
 RUN echo 'eval "$(direnv hook bash)"' >> /home/developer/.bashrc
 
 # Setting up direnv for the local clone, see envrc/README.md for more info
-COPY --chown=root:developer --chmod=0644 ./envrc/ /home/developer/envrc/
+COPY --chown=root:developer --chmod=0755 ./envrc/ /home/developer/envrc/
 ARG IMAGE_VARIANT=static-libs
 RUN cp "/home/developer/envrc/${IMAGE_VARIANT}.envrc" /home/developer/nodejs/node/.envrc
 RUN direnv allow /home/developer/nodejs/node

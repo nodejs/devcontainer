@@ -9,7 +9,9 @@ To add an image variant, add a new file starting with `use nix` with the flags s
 - [`-I nixpkgs=/home/developer/nodejs/node/tools/nix/pkgs.nix`][`-I`]:
   that defines which version of the [NixOS/nixpkgs][] repository it should load.
 - [`--arg <key> <nix-value>`][`--arg`]: Override the default values defines in the
-  [`shell.nix`][] with some custom value.
+  [`shell.nix`][] with some custom value. E.g., pass
+  `--arg extraConfigFlags '["--enable-asan" "--enable-ubsan"]'` to
+  enable ASAN and UBSAN.
 - [`--argstr <key> <string-value>`][`--argstr`]: Useful to avoid the double quoting,
   e.g. instead of `--arg icu '"small"'`, it is equivalent to pass `--argstr icu small`.
 
