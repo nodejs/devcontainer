@@ -1,4 +1,4 @@
-FROM ubuntu:latest AS build
+FROM ubuntu:24.04 AS build
 
 ARG USER_UID=900
 ARG USER_GID=$USER_UID
