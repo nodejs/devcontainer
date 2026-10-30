@@ -1,8 +1,8 @@
 name: Merge images
 
 on:
-  workflow_dispatch:  # allow explicit dispatches from arch-specific builds
-  workflow_call:    # allow this workflow to be called by another workflow
+  workflow_dispatch: # allow re-merging the platform tags by hand
+  workflow_call: # allow this workflow to be called by another workflow
 
 env:
   IMAGE: ${{ vars.DOCKERHUB_IMAGE }}
@@ -17,21 +17,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with: # these are defined in the GitHub Secrets UI
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       # Merge the multiple architecture-specific images into a single multi-arch image.
       # If images for other architectures do not exist in the registry yet, this step will fail.
       # It will only succeed when at least one image for each architecture has been built and pushed.
-      # If images for other architectures are being built and the ones in the registry
-      # are old, it only updates the nightly tag for the architecture that triggered this
-      # workflow. When images for other architectures are built successfully later, they will
-      # trigger this workflow again and merge the updated images.
+      # When a manual run rebuilt only one platform, the other platform's existing image is
+      # merged in unchanged.
       - name: Create multi-arch manifest
         run: |
           docker buildx imagetools create \
