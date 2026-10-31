@@ -2,24 +2,109 @@ name: Nightly Build Orchestrator
 
 on:
   workflow_dispatch: # allows us to trigger runs manually in the GitHub UI
-  repository_dispatch: # allows us to trigger runs from an external repository
+    inputs:
+      node_ref:
+        description: 'nodejs/node commit SHA to build (omit for head of main)'
+        type: string
+        required: false
+        default: ''
+      platform:
+        description: 'Platform to build (the other keeps its current image)'
+        type: choice
+        options:
+          - all
+          - linux/amd64
+          - linux/arm64
+        default: all
+  repository_dispatch: # sent by nodejs/node's daily workflow once it has built main
+    types: [node-daily]
   schedule:
-    - cron:  '0 0 * * *' # runs nightly
+    # Fallback in case the dispatches from nodejs/node stop arriving.
+    - cron:  '0 6 * * 0' # runs weekly
 
-# When any of the build workflows complete successfully on the nightly branch,
-# the merge workflow will be triggered by those workflows directly to update
-# the build for that platform. These are run independently and concurrently,
-# if any of them fail, at worst the image for that specific platform won't be
-# updated, but at least one usable image for a platform is always available,
-# which is better than dragging the updates for all platforms to wait
-# for one platform to be fixed.
+# nodejs/node's daily workflow dispatches a `node-daily` event with the commit it builds successfully.
+#
+# Each platform builds in its own job on a native runner and pushes its own nightly-linux-<arch> tag.
+# Then, the merge workflow combines the platform tags into `nightly`.
+#
+# If any platform fails, the others still push their own nightly-linux-<arch> tags, but `nightly` is not updated.
+# The failed run flags the broken platform in an issue.
 jobs:
-  call_build_arm64:
+  docker:
     if: ${{ github.ref == format('refs/heads/{0}', vars.NIGHTLY_BRANCH) }}
-    uses: ./.github/workflows/docker-build-and-publish-linux-arm64.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJSON(inputs.platform == 'linux/amd64' && '["amd64"]' || inputs.platform == 'linux/arm64' && '["arm64"]' || '["amd64", "arm64"]') }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    steps: # See https://docs.docker.com/build/ci/github-actions/multi-platform/
+      - name: Login to DockerHub
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with: # these are defined in the GitHub Secrets UI
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build and push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          platforms: linux/${{ matrix.arch }}
+          push: true
+          build-args: NODE_REF=${{ github.event.client_payload.sha || inputs.node_ref }}
+          tags: ${{ vars.DOCKERHUB_IMAGE }}:nightly-linux-${{ matrix.arch }}
+
+  # Only runs when every platform in this run built successfully (the default for `needs`).
+  merge:
+    needs: [docker]
+    uses: ./.github/workflows/docker-merge.yml
     secrets: inherit
 
-  call_build_amd64:
-    if: ${{ github.ref == format('refs/heads/{0}', vars.NIGHTLY_BRANCH) }}
-    uses: ./.github/workflows/docker-build-and-publish-linux-amd64.yml
-    secrets: inherit
+  # GitHub only notifies whoever triggered a run (for repository_dispatches it is the bot account)
+  # So when an automatic run fails, open a tracking issue (or comment on the open one), and close it once a run succeeds.
+  # Manual runs are skipped: GitHub already notifies whoever started them.
+  report:
+    needs: [docker, merge]
+    if: ${{ !cancelled() && github.event_name != 'workflow_dispatch' && needs.docker.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read # to list the failed jobs
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      FAILED: ${{ contains(needs.*.result, 'failure') }}
+      NODE_REF: ${{ github.event.client_payload.sha || 'head of main' }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Open, update, or close the tracking issue
+        run: |
+          issue=$(gh issue list --label "nightly-build-failure" --state open --json number --jq '.[0].number // empty')
+
+          if [ "$FAILED" = true ]; then
+            failed_jobs=$(gh run view "$GITHUB_RUN_ID" --json jobs --jq '.jobs[] | select(.conclusion == "failure") | "- " + .name')
+            details=$(printf 'Run: %s\nTrigger: %s\nnodejs/node commit: %s\n\nFailed jobs:\n%s' "$RUN_URL" "$GITHUB_EVENT_NAME" "$NODE_REF" "$failed_jobs")
+            if [ -n "$issue" ]; then
+              gh issue comment "$issue" --body "$(printf 'Still failing.\n\n%s' "$details")"
+            else
+              gh issue create --label "nightly-build-failure" --title 'Nightly image build is failing' \
+                --body "$(printf '@nodejs/devcontainer the nightly tag was not updated because a build failed.\n\n%s' "$details")"
+            fi
+          elif [ -n "$issue" ]; then
+            gh issue close "$issue" --comment "Fixed: $RUN_URL built successfully and tagged nightly."
+          fi
+
+  # GitHub disables scheduled workflows in public repositories after 60 days without repository activity.
+  # This repo often goes a long time without reasonable updates, yet we want the images to continue building.
+  # Re-enabling the workflow on every automatic run resets that timer, so the weekly fallback keeps running even when the repo is quiet.
+  keepalive:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Keep the scheduled trigger enabled
+        run: gh api -X PUT "repos/${GITHUB_REPOSITORY}/actions/workflows/docker-build.yml/enable"
+        env:
+          GH_TOKEN: ${{ github.token }}
