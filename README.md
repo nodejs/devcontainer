@@ -81,7 +81,7 @@ nodejs/node's [daily workflow](https://github.com/nodejs/node/blob/main/.github/
 
 The [build workflow](./.github/workflows/docker-build.yml) then builds and publishes the images from that commit across both platforms (`arm64` and `amd64`) and then tags them both as `nightly`. If either platform fails, the other is still published as `nightly-linux-<arch>`, but `nightly` stays on the previous build until both succeed. A failed automatic run opens an issue labeled `nightly-build-failure` (or comments on the open one), and the next successful run closes it.
 
-In case the `repository_dispatch` events stop arriving, a weekly scheduled run builds the head of `main` as a fallback. Builds can also be manually triggered using `workflow_dispatch` from the Actions tab. You can specify a commit SHA (defaults to head of main) and which platform to build (defaults to both of them).
+In case the `repository_dispatch` events stop arriving, a weekly scheduled run builds the tip of the default branch as a fallback. Builds can also be manually triggered using `workflow_dispatch` from the Actions tab. You can specify a commit SHA (defaults to head of main) and which platform to build (defaults to both of them).
 
 ### Tips and Tricks for Debugging Failed Builds and Otherwise Developing in This Repo
 

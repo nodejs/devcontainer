@@ -21,7 +21,7 @@ ENV DEBIAN_FRONTEND=1
 COPY --chown=root:developer --chmod=0755 ./scripts/ /home/developer/scripts/
 
 USER developer
-# The nodejs/node commit to build; empty builds the head of main.
+# The nodejs/node commit to build; empty builds the tip of the default branch.
 ARG NODE_REF=
 RUN /home/developer/scripts/clone.sh
 
