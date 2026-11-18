@@ -17,11 +17,10 @@ mkdir -p /home/developer/nodejs/node
 (
   cd /home/developer/nodejs/node
   git init --initial-branch=main
-  git remote add --track main origin https://github.com/nodejs/node.git
-  git fetch --depth 1 origin "${NODE_REF:-main}"
+  git remote add --track main upstream https://github.com/nodejs/node.git
+  git fetch --depth 1 upstream "${NODE_REF:-main}"
   git reset --hard FETCH_HEAD
-  git update-ref refs/remotes/origin/main FETCH_HEAD
-  git branch --set-upstream-to=origin/main main
-  git remote add upstream https://github.com/nodejs/node.git
+  git update-ref refs/remotes/upstream/main FETCH_HEAD
+  git branch --set-upstream-to=upstream/main main
   git restore-mtime  # Restore file modification times to commit times for build cache to match.
 )
