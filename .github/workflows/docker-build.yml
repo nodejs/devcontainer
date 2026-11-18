@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: ${{ fromJSON(inputs.platform == 'linux/amd64' && '["amd64"]' || inputs.platform == 'linux/arm64' && '["arm64"]' || '["amd64", "arm64"]') }}
+        arch: ${{ fromJSON(startsWith(inputs.platform, 'linux/amd64') && '["amd64"]' || startsWith(inputs.platform, 'linux/arm64') && '["arm64"]' || '["amd64", "arm64"]') }}
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     steps: # See https://docs.docker.com/build/ci/github-actions/multi-platform/
       - name: Login to DockerHub
