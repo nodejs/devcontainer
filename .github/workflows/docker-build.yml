@@ -58,7 +58,7 @@ jobs:
   # Only runs when every platform in this run built successfully (the default for `needs`).
   merge:
     needs: [docker]
-    uses: ./.github/workflows/docker-merge.yml
+    uses: $/.github/workflows/docker-merge.yml
     secrets: inherit
 
   # GitHub only notifies whoever triggered a run (for repository_dispatches it is the bot account)
