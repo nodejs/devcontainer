@@ -24,14 +24,35 @@ on:
 
 # nodejs/node's daily workflow dispatches a `node-daily` event with the commit it builds successfully.
 #
-# Each platform builds in its own job on a native runner and pushes its own nightly-linux-<arch> tag.
-# Then, the merge workflow combines the platform tags into `nightly`.
+# The resolve job picks the commit once, so every platform builds the same one.
+# Each platform builds in its own job on a native runner and pushes its own nightly-linux-<arch> and nightly-<sha>-linux-<arch> tags.
+# Then, the merge workflow combines the platform tags into `nightly` and the immutable `nightly-<sha>`.
 #
-# If any platform fails, the others still push their own nightly-linux-<arch> tags, but `nightly` is not updated.
+# If any platform fails, the others still push their own platform tags, but `nightly` is not updated.
 # The failed run flags the broken platform in an issue.
 jobs:
-  docker:
+  resolve:
     if: ${{ github.ref == format('refs/heads/{0}', vars.NIGHTLY_BRANCH) }}
+    runs-on: ubuntu-slim
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
+    steps:
+      - name: Resolve the nodejs/node commit
+        id: resolve
+        env:
+          NODE_REF: ${{ github.event.client_payload.sha || inputs.node_ref }}
+        run: |
+          if [ -z "$NODE_REF" ]; then
+            NODE_REF=$(git ls-remote https://github.com/nodejs/node.git refs/heads/main | cut -f1)
+          fi
+          if [[ ! "$NODE_REF" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::NODE_REF must be a full commit SHA, got: $NODE_REF"
+            exit 1
+          fi
+          echo "sha=$NODE_REF" >> "$GITHUB_OUTPUT"
+
+  docker:
+    needs: [resolve]
     strategy:
       fail-fast: false
       matrix:
@@ -52,21 +73,27 @@ jobs:
         with:
           platforms: linux/${{ matrix.arch }}
           push: true
-          build-args: NODE_REF=${{ github.event.client_payload.sha || inputs.node_ref }}
-          tags: ${{ vars.DOCKERHUB_IMAGE }}:nightly-linux-${{ matrix.arch }}
+          build-args: NODE_REF=${{ needs.resolve.outputs.sha }}
+          labels: org.nodejs.node.commit=${{ needs.resolve.outputs.sha }}
+          tags: |
+            ${{ vars.DOCKERHUB_IMAGE }}:nightly-linux-${{ matrix.arch }}
+            ${{ vars.DOCKERHUB_IMAGE }}:nightly-${{ needs.resolve.outputs.sha }}-linux-${{ matrix.arch }}
 
   # Only runs when every platform in this run built successfully (the default for `needs`).
   merge:
-    needs: [docker]
+    needs: [resolve, docker]
     uses: $/.github/workflows/docker-merge.yml
     secrets: inherit
+    with:
+      # A single-platform run has no nightly-<sha> image for the other platform, so it only updates `nightly`.
+      sha: ${{ (inputs.platform || 'all') == 'all' && needs.resolve.outputs.sha || '' }}
 
   # GitHub only notifies whoever triggered a run (for repository_dispatches it is the bot account)
   # So when an automatic run fails, open a tracking issue (or comment on the open one), and close it once a run succeeds.
   # Manual runs are skipped: GitHub already notifies whoever started them.
   report:
-    needs: [docker, merge]
-    if: ${{ !cancelled() && github.event_name != 'workflow_dispatch' && needs.docker.result != 'skipped' }}
+    needs: [resolve, docker, merge]
+    if: ${{ !cancelled() && github.event_name != 'workflow_dispatch' && needs.resolve.result != 'skipped' }}
     runs-on: ubuntu-slim
     permissions:
       actions: read # to list the failed jobs
@@ -75,7 +102,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
       FAILED: ${{ contains(needs.*.result, 'failure') }}
-      NODE_REF: ${{ github.event.client_payload.sha || 'head of main' }}
+      NODE_REF: ${{ needs.resolve.outputs.sha || github.event.client_payload.sha || 'tip of the default branch' }}
       RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - name: Open, update, or close the tracking issue
