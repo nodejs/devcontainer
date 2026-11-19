@@ -2,7 +2,18 @@ name: Merge images
 
 on:
   workflow_dispatch: # allow re-merging the platform tags by hand
+    inputs:
+      sha:
+        description: 'nodejs/node commit SHA whose platform images to merge (default: the current nightly-linux-<arch> tags)'
+        type: string
+        required: false
+        default: ''
   workflow_call: # allow this workflow to be called by another workflow
+    inputs:
+      sha:
+        type: string
+        required: false
+        default: ''
 
 env:
   IMAGE: ${{ vars.DOCKERHUB_IMAGE }}
@@ -30,12 +41,25 @@ jobs:
       # It will only succeed when at least one image for each architecture has been built and pushed.
       # When a manual run rebuilt only one platform, the other platform's existing image is
       # merged in unchanged.
+      #
+      # With a commit SHA, it merges that commit's platform images into both `nightly-<sha>` and `nightly`.
+      # Merging by SHA keeps `nightly` from mixing platforms built from different commits when runs overlap.
       - name: Create multi-arch manifest
+        env:
+          SHA: ${{ inputs.sha }}
         run: |
-          docker buildx imagetools create \
-            -t ${REGISTRY}/${IMAGE}:nightly \
-            ${REGISTRY}/${IMAGE}:nightly-linux-amd64 \
-            ${REGISTRY}/${IMAGE}:nightly-linux-arm64
+          if [ -n "$SHA" ]; then
+            docker buildx imagetools create \
+              -t ${REGISTRY}/${IMAGE}:nightly-${SHA} \
+              -t ${REGISTRY}/${IMAGE}:nightly \
+              ${REGISTRY}/${IMAGE}:nightly-${SHA}-linux-amd64 \
+              ${REGISTRY}/${IMAGE}:nightly-${SHA}-linux-arm64
+          else
+            docker buildx imagetools create \
+              -t ${REGISTRY}/${IMAGE}:nightly \
+              ${REGISTRY}/${IMAGE}:nightly-linux-amd64 \
+              ${REGISTRY}/${IMAGE}:nightly-linux-arm64
+          fi
 
       - name: Verify multi-arch manifest
         run: |
