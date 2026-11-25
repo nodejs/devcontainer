@@ -22,5 +22,7 @@ mkdir -p /home/developer/nodejs/node
   git reset --hard FETCH_HEAD
   git update-ref refs/remotes/upstream/main FETCH_HEAD
   git branch --set-upstream-to=upstream/main main
+  # Contributors mount their own checkout over this one, so record the commit outside it.
+  git rev-parse HEAD > /home/developer/nodejs/node-commit
   git restore-mtime  # Restore file modification times to commit times for build cache to match.
 )
