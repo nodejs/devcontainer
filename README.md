@@ -15,7 +15,7 @@ Once you've got Docker Desktop running, you can run the following command to pul
 
 ```sh
 docker pull nodejs/devcontainer:nightly
-docker run -it nodejs/devcontainer:nightly /bin/bash
+docker run -it nodejs/devcontainer:nightly
 ```
 
 To use it as a devcontainer, create a `.devcontainer/devcontainer.json` file in the project with the following content:
